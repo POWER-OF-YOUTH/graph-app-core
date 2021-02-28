@@ -1,0 +1,23 @@
+{
+  "name": "graph-app-core",
+  "version": "0.0.1",
+  "description": "Библиотека, предоставляющая удобный интерфейс для взаимодействия с СУБД «Neo4j».",
+  "main": "index.js",
+  "scripts": {
+    "default": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/POWER-OF-YOUTH/graph-app-core.git"
+  },
+  "keywords": [],
+  "author": "POWER-OF-YOUTH",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/POWER-OF-YOUTH/graph-app-core/issues"
+  },
+  "homepage": "https://github.com/POWER-OF-YOUTH/graph-app-core#readme",
+  "dependencies": {
+    "neo4j-driver": "^4.2.2"
+  }
+}
