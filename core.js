@@ -1,5 +1,7 @@
 const neo4j = require('neo4j-driver');
 
+const Property = require('./property');
+
 class Core {
     /**
      * 
@@ -14,20 +16,23 @@ class Core {
     /**
      * 
      * @param {String} name Graph name
-     * @returns {Promise<{name: String, created: Date}>}
+     * @returns {Promise<{name: String, created: Date}>} Graph description
      */
     async createGraph(name) {
         try {
-            var dbResponse = await this._driver.session()
-                .run("CREATE (n:Graph) SET n = { name: $name, created: $date } RETURN n", { name: name, date: Date.now() });
+            let session = this._driver.session();
+
+            var graphDescription = { name: name, date: Date.now() };
+
+            await session.run("CREATE (n:Graph) SET n = { name: $name, created: $date } RETURN n", { name: graphDescription.name, date: graphDescription.date });
+
+            session.close();
         }
         catch (err) {
             throw new Error("Database error!");
         }
 
-        let graph = dbResponse.records[0].get("n").properties;
-
-        return graph;
+        return graphDescription;
     }
 
     /**
@@ -37,13 +42,55 @@ class Core {
      */
     async deleteGraph(name) {
         try {
-            var dbResponse = await this._driver.session()
-                .run("MATCH (n:Graph)-[rel:CONTAINS]->(m) WHERE n.name = $name DELETE rel, m, n", { name: name });
+            let session = this._driver.session();
+            
+            await session.run("MATCH (n:Graph)-[CONTAINS]-(m:Class)-[:HAVE]->(p:Property) WHERE n.name = $name DETACH DELETE p, m, n", { name: name });
+
+            session.close();
+        }
+        catch (err) {
+            console.log(err);
+            throw new Error("Database error!");
+        }
+    }
+
+    /**
+     * 
+     * @param {String} graph Name of the graph to add the class to 
+     * @param {String} name Class name
+     * @param {Array<Property>} properties Class properties
+     */
+    async createClass(graph, name, properties) {
+        try {
+            let session = this._driver.session();
+
+            var classDescription = { name: name, properties: properties.map(p => { return { name: p.getName(), type: p.getType() }})}
+
+            await session.run(`
+                MATCH (graph:Graph) WHERE graph.name = $graphName 
+                CREATE (class:Class) SET class.name = $className
+                MERGE (graph)-[:CONTAINS]->(class)
+                FOREACH (property IN $properties | 
+                    CREATE (p:Property) SET p = { name: property.name, type: property.type } 
+                    MERGE (class)-[:HAVE]->(p))
+            `, { graphName: graph, className: classDescription.name, properties: classDescription.properties});
+
+            await session.run(`
+                MATCH (graph:Graph)-[:CONTAINS]-(class:Class)-[:HAVE]->(property:Property) WHERE graph.name = $graphName AND class.name = $className
+                MATCH (type:Type) WHERE type.name = property.type
+                MERGE (property)-[:INSTANCE_OF]->(type)
+            `, { graphName: graph, className: classDescription.name});
+
+            session.close();
         }
         catch (err) {
             throw new Error("Database error!");
         }
+
+        return classDescription;
     }
 }
 
 module.exports = Core;
+
+//CREATE CONSTRAINT unique_graph_name ON (graph:Graph) ASSERT graph.name IS UNIQUE
