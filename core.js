@@ -24,7 +24,7 @@ class Core {
 
             var graphDescription = { name: name, date: Date.now() };
 
-            await session.run("CREATE (n:Graph) SET n = { name: $name, created: $date } RETURN n", { name: graphDescription.name, date: graphDescription.date });
+            await session.run("CREATE (n:Graph) SET n = { name: $name, created: $date }", { name: graphDescription.name, date: graphDescription.date });
 
             session.close();
         }
@@ -49,7 +49,6 @@ class Core {
             session.close();
         }
         catch (err) {
-            console.log(err);
             throw new Error("Database error!");
         }
     }
@@ -59,6 +58,7 @@ class Core {
      * @param {String} graph Name of the graph to add the class to 
      * @param {String} name Class name
      * @param {Array<Property>} properties Class properties
+     * @returns {Promise}
      */
     async createClass(graph, name, properties) {
         try {
@@ -66,24 +66,26 @@ class Core {
 
             var classDescription = { name: name, properties: properties.map(p => { return { name: p.getName(), type: p.getType() }})}
 
-            await session.run(`
-                MATCH (graph:Graph) WHERE graph.name = $graphName 
-                CREATE (class:Class) SET class.name = $className
-                MERGE (graph)-[:CONTAINS]->(class)
-                FOREACH (property IN $properties | 
-                    CREATE (p:Property) SET p = { name: property.name, type: property.type } 
-                    MERGE (class)-[:HAVE]->(p))
-            `, { graphName: graph, className: classDescription.name, properties: classDescription.properties});
-
-            await session.run(`
-                MATCH (graph:Graph)-[:CONTAINS]-(class:Class)-[:HAVE]->(property:Property) WHERE graph.name = $graphName AND class.name = $className
-                MATCH (type:Type) WHERE type.name = property.type
-                MERGE (property)-[:INSTANCE_OF]->(type)
-            `, { graphName: graph, className: classDescription.name});
+            await session.writeTransaction(tx => {
+                tx.run(`
+                    MATCH (graph:Graph) WHERE graph.name = $graphName 
+                    CREATE (class:Class) SET class = { name: $className, _unique_key: id(graph) + "_" + $className }
+                    MERGE (graph)-[:CONTAINS]->(class)
+                    FOREACH (property IN $properties | 
+                        CREATE (p:Property) SET p = { name: property.name, type: property.type, _unique_key: id(class) + "_" + property.name } 
+                        MERGE (class)-[:HAVE]->(p))
+                `, { graphName: graph, className: classDescription.name, properties: classDescription.properties});
+                tx.run(`
+                    MATCH (graph:Graph)-[:CONTAINS]-(class:Class)-[:HAVE]->(property:Property) WHERE graph.name = $graphName AND class.name = $className
+                    MATCH (type:Type) WHERE type.name = property.type
+                    MERGE (property)-[:INSTANCE_OF]->(type)
+                `, { graphName: graph, className: classDescription.name});
+            });
 
             session.close();
         }
         catch (err) {
+            console.log(err);
             throw new Error("Database error!");
         }
 
@@ -93,4 +95,10 @@ class Core {
 
 module.exports = Core;
 
-//CREATE CONSTRAINT unique_graph_name ON (graph:Graph) ASSERT graph.name IS UNIQUE
+// Constraints
+/**
+ * CREATE CONSTRAINT unique_graph_name ON (graph:Graph) ASSERT graph.name IS UNIQUE
+ * CREATE CONSTRAINT unique_class_in_graph ON (class:Class) ASSERT class._unique_key IS UNIQUE
+ * CREATE CONSTRAINT unique_property_in_class ON (property:Property) ASSERT property._unique_key IS UNIQUE
+ */
+//
