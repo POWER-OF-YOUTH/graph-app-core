@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/POWER-OF-YOUTH/graph-app-core#readme",
   "dependencies": {
-    "neo4j-driver": "^4.2.3"
+    "neo4j-driver": "^4.2.3",
+    "uuid": "^8.3.2"
   }
 }
