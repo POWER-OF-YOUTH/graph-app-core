@@ -1,6 +1,6 @@
 const { Core, Property, Type } = require('./lib');
 
-exports = {
+module.exports = {
     Core,
     Property,
     Type
