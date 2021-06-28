@@ -25,5 +25,5 @@ CREATE CONSTRAINT unique_property_in_class ON (property:Property) ASSERT propert
 CREATE INDEX node_id FOR (node:Node) ON (node.id) 
 ```
 
-### Ссылки:  
+# Ссылки:  
 NPM — https://www.npmjs.com/package/graph-app-core
