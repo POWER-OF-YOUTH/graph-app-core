@@ -1,7 +1,5 @@
-const { Core, Property, Type } = require('./lib');
+const { Graph } = require('./src');
 
 module.exports = {
-    Core,
-    Property,
-    Type
+    Graph
 }
