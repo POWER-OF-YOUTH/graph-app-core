@@ -7,8 +7,8 @@ class Class {
      * @param {Array<Property>} properties 
      */
     constructor(name, properties = []) {
-        this.name = name;
-        this.properties = properties;
+        this._name = name;
+        this._properties = properties;
     }
 
     /**
@@ -22,11 +22,11 @@ class Class {
     }
 
     getName() {
-        return this.name;
+        return this._name;
     }
 
     getProperties() {
-        return this.properties;
+        return this._properties;
     }
 
     /**
@@ -34,8 +34,8 @@ class Class {
      */
     toJSON() {
         return {
-            name: this.name,
-            properties: this.properties.map(p => { return { name: p.getName(), type: p.getType() }})
+            name: this._name,
+            properties: this._properties.map(p => { return { name: p.getName(), type: p.getType() }})
         }
     }
 }

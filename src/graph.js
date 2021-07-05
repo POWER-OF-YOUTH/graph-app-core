@@ -12,10 +12,10 @@ class Graph
      * @param {Date} date 
     */
     constructor(id, name, description, date) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.date = date;
+        this._id = id;
+        this._name = name;
+        this._description = description;
+        this._date = date;
     }
 
     /**
@@ -34,7 +34,7 @@ class Graph
      * @returns {String} uuid
      */
     getId() {
-        return this.id;
+        return this._id;
     }
 
     /**
@@ -42,7 +42,7 @@ class Graph
      * @returns {String} Graph name
      */
     getName() {
-        return this.name;
+        return this._name;
     }
 
     /**
@@ -51,7 +51,7 @@ class Graph
      * @returns {void}
      */
     setName(name) {
-        this.name = name;
+        this._name = name;
     }
 
     /**
@@ -59,7 +59,7 @@ class Graph
      * @returns {String} Graph description
      */
     getDescription() {
-        return this.description;
+        return this._description;
     }
 
     /**
@@ -68,7 +68,7 @@ class Graph
      * @returns {void}
      */
     setDescription(description) {
-        this.description = description;
+        this._description = description;
     }
 
     /**
@@ -76,7 +76,7 @@ class Graph
      * @returns {String} Creation date
      */
     getCreationDate() {
-        return this.date;
+        return this._date;
     }
 
     /**
@@ -85,10 +85,10 @@ class Graph
      */
     toJSON() { // TODO: 
         return { 
-            id: this.id, 
-            name: this.name,  
-            description: this.description,
-            date: this.date
+            id: this._id, 
+            name: this._name,  
+            description: this._description,
+            date: this._date
         }
     }
 }

@@ -14,8 +14,7 @@ class ClassMapper
      */
     constructor(driver, graph) {
         this._driver = driver;
-
-        this.graph = graph;
+        this._graph = graph;
     }
 
     /**
@@ -32,7 +31,7 @@ class ClassMapper
                 OPTIONAL MATCH (c)-[:HAVE]-(p:Property)-[:INSTANCE_OF]->(t:Type)
                 RETURN { name: c.name, properties: collect({name: p.name, type: t.name}) }
                 AS data
-            `, { graphId: this.graph.getId() });
+            `, { graphId: this._graph.getId() });
             session.close();
 
             let clss = dbResponse.records.map(r => {
@@ -64,7 +63,7 @@ class ClassMapper
                 OPTIONAL MATCH (c)-[:HAVE]-(p:Property)-[:INSTANCE_OF]->(t:Type)
                 RETURN { name: c.name, properties: collect({name: p.name, type: t.name}) }
                 AS data
-            `, { graphId: this.graph.getId(), className: name});
+            `, { graphId: this._graph.getId(), className: name});
             session.close();
             
             if (dbResponse.records.length == 0) 
@@ -99,14 +98,14 @@ class ClassMapper
                         CREATE (p:Property) 
                         SET p = { name: property.name, type: property.type, _unique_key: id(c) + "_" + property.name } 
                         MERGE (c)-[:HAVE]->(p))
-                `, { graphId: this.graph.getId(), className: cls.getName(), properties: cls.getProperties().map(p => p.toJSON())});
+                `, { graphId: this._graph.getId(), className: cls.getName(), properties: cls.getProperties().map(p => p.toJSON())});
                 tx.run(`
                     MATCH (g:Graph)-[:CONTAINS]-(c:Class)-[:HAVE]->(p:Property) 
                     WHERE g.id = $graphId AND c.name = $className
                     MATCH (t:Type) 
                     WHERE t.name = p.type
                     MERGE (p)-[:INSTANCE_OF]->(t)
-                `, { graphId: this.graph.getId(), className: cls.getName() });
+                `, { graphId: this._graph.getId(), className: cls.getName() });
             });
             session.close();
         }
@@ -130,7 +129,7 @@ class ClassMapper
                 WHERE g.id = $graphId AND c.name = $className
                 OPTIONAL MATCH (c)-[:HAVE]->(p:Property)
                 DETACH DELETE p, c
-            `, { graphId: this.graph.getId(), className: cls.getName() });
+            `, { graphId: this._graph.getId(), className: cls.getName() });
             session.close();
         }
         catch (err) {
@@ -149,7 +148,7 @@ class ClassMapper
                 WHERE g.id = $graphId AND c.name = $className
                 MATCH (n:Node)-[:REALIZE]->(c)
                 RETURN n LIMIT 1
-            `, { graphId: this.graph.getId(), className: cls.getName() });
+            `, { graphId: this._graph.getId(), className: cls.getName() });
             session.close();
 
             return dbResponse.records.length > 0;
