@@ -8,20 +8,23 @@ const Class = require('./class');
 class ClassMapper 
 {
     /**
-     * 
+     * Private constructor
      * @param {neo4j.Driver} driver
-     * @param {Graph} graph
      */
-    constructor(driver, graph) {
+    constructor(driver) {
         this._driver = driver;
-        this._graph = graph;
+    }
+
+    static new(driver) {
+        return new ClassMapper(driver);
     }
 
     /**
      * Get all classes
+     * @param {Graph} graph
      * @returns {Promise<Array<Class>>}
      */
-    async all() {
+    async all(graph) {
         try {
             let session = this._driver.session();
             let dbResponse = await session.run(`
@@ -31,7 +34,7 @@ class ClassMapper
                 OPTIONAL MATCH (c)-[:HAVE]-(p:Property)-[:INSTANCE_OF]->(t:Type)
                 RETURN { name: c.name, properties: collect({name: p.name, type: t.name}) }
                 AS data
-            `, { graphId: this._graph.getId() });
+            `, { graphId: graph.getId() });
             session.close();
 
             let clss = dbResponse.records.map(r => {
@@ -51,10 +54,11 @@ class ClassMapper
 
     /**
      * Find class by id or return null
+     * @param {Graph} graph
      * @param {String} name 
      * @returns {Promise<Class>}
      */
-    async findByName(name) {
+    async findByName(graph, name) {
         try {
             let session = this._driver.session();
             let dbResponse = await session.run(`
@@ -63,7 +67,7 @@ class ClassMapper
                 OPTIONAL MATCH (c)-[:HAVE]-(p:Property)-[:INSTANCE_OF]->(t:Type)
                 RETURN { name: c.name, properties: collect({name: p.name, type: t.name}) }
                 AS data
-            `, { graphId: this._graph.getId(), className: name});
+            `, { graphId: graph.getId(), className: name});
             session.close();
             
             if (dbResponse.records.length == 0) 
@@ -81,10 +85,11 @@ class ClassMapper
 
     /**
      * 
+     * @param {Graph} graph
      * @param {Class} cls 
      * @returns {Promise<void>}
      */
-    async save(cls) {
+    async save(graph, cls) {
         try {
             let session = this._driver.session();
             let dbResponse = await session.writeTransaction(tx => {
@@ -98,14 +103,14 @@ class ClassMapper
                         CREATE (p:Property) 
                         SET p = { name: property.name, type: property.type, _unique_key: id(c) + "_" + property.name } 
                         MERGE (c)-[:HAVE]->(p))
-                `, { graphId: this._graph.getId(), className: cls.getName(), properties: cls.getProperties().map(p => p.toJSON())});
+                `, { graphId: graph.getId(), className: cls.getName(), properties: cls.getProperties().map(p => p.toJSON())});
                 tx.run(`
                     MATCH (g:Graph)-[:CONTAINS]-(c:Class)-[:HAVE]->(p:Property) 
                     WHERE g.id = $graphId AND c.name = $className
                     MATCH (t:Type) 
                     WHERE t.name = p.type
                     MERGE (p)-[:INSTANCE_OF]->(t)
-                `, { graphId: this._graph.getId(), className: cls.getName() });
+                `, { graphId: graph.getId(), className: cls.getName() });
             });
             session.close();
         }
@@ -116,11 +121,12 @@ class ClassMapper
 
     /**
      * Destroy class in the database
+     * @param {Graph} graph
      * @param {Class} cls 
      * @returns {Promise<void>}
      */
-    async destroy(cls) {
-        if (await this._hasImplementedNodes(cls))
+    async destroy(graph, cls) {
+        if (await this._hasImplementedNodes(graph, cls))
             throw new DatabaseError("Class has implemented nodes!");
         try {
             let session = this._driver.session();
@@ -129,7 +135,7 @@ class ClassMapper
                 WHERE g.id = $graphId AND c.name = $className
                 OPTIONAL MATCH (c)-[:HAVE]->(p:Property)
                 DETACH DELETE p, c
-            `, { graphId: this._graph.getId(), className: cls.getName() });
+            `, { graphId: graph.getId(), className: cls.getName() });
             session.close();
         }
         catch (err) {
@@ -138,9 +144,11 @@ class ClassMapper
     }
 
     /**
+     * 
+     * @param {Graph} graph
      * @returns {Promise<boolean>}
      */
-    async _hasImplementedNodes(cls) {
+    async _hasImplementedNodes(graph, cls) {
         try {
             let session = this._driver.session();
             let dbResponse = await session.run(`
@@ -148,7 +156,7 @@ class ClassMapper
                 WHERE g.id = $graphId AND c.name = $className
                 MATCH (n:Node)-[:REALIZE]->(c)
                 RETURN n LIMIT 1
-            `, { graphId: this._graph.getId(), className: cls.getName() });
+            `, { graphId: graph.getId(), className: cls.getName() });
             session.close();
 
             return dbResponse.records.length > 0;
