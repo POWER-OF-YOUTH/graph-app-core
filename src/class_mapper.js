@@ -32,14 +32,14 @@ class ClassMapper
                 WHERE g.id = $graphId
                 MATCH (g)-[:CONTAINS]-(c:Class)
                 OPTIONAL MATCH (c)-[:HAVE]-(p:Property)-[:INSTANCE_OF]->(t:Type)
-                RETURN { name: c.name, properties: collect({name: p.name, type: t.name}) }
+                RETURN { name: c.name, properties: collect({name: p.name, type: t.name, defaultValue: p.defaultValue })}
                 AS data
             `, { graphId: graph.getId() });
             session.close();
 
             let clss = dbResponse.records.map(r => {
                 let data = r.get("data");
-                let cls = new Class(data.name, data.properties.filter(p => p.name !== null).map(p => new Property(p.name, p.type)));
+                let cls = new Class(data.name, data.properties.filter(p => p.name !== null).map(p => new Property(p.name, p.type, p.defaultValue)));
 
                 return cls;
             })
@@ -65,7 +65,7 @@ class ClassMapper
                 MATCH (g:Graph)-[:CONTAINS]-(c:Class)
                 WHERE g.id = $graphId AND c.name = $className
                 OPTIONAL MATCH (c)-[:HAVE]-(p:Property)-[:INSTANCE_OF]->(t:Type)
-                RETURN { name: c.name, properties: collect({name: p.name, type: t.name}) }
+                RETURN { name: c.name, properties: collect({name: p.name, type: t.name, defaultValue: p.defaultValue })}
                 AS data
             `, { graphId: graph.getId(), className: name});
             session.close();
@@ -74,7 +74,7 @@ class ClassMapper
                 return null;
                 
             let data = dbResponse.records[0].get("data");
-            let cls = new Class(data.name, data.properties.filter(p => p.name !== null).map(p => new Property(p.name, p.type)));
+            let cls = new Class(data.name, data.properties.filter(p => p.name !== null).map(p => new Property(p.name, p.type, p.defaultValue)));
                 
             return cls;
         }
@@ -101,7 +101,7 @@ class ClassMapper
                     MERGE (g)-[:CONTAINS]->(c)
                     FOREACH (property IN $properties | 
                         CREATE (p:Property) 
-                        SET p = { name: property.name, type: property.type, _unique_key: id(c) + "_" + property.name } 
+                        SET p = { name: property.name, type: property.type, defaultValue: property.defaultValue, _unique_key: id(c) + "_" + property.name } 
                         MERGE (c)-[:HAVE]->(p))
                 `, { graphId: graph.getId(), className: cls.getName(), properties: cls.getProperties().map(p => p.toJSON())});
                 tx.run(`
@@ -162,7 +162,6 @@ class ClassMapper
             return dbResponse.records.length > 0;
         }
         catch (err) {
-            console.log(err);
             throw new DatabaseError();
         }
     }
