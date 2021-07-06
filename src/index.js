@@ -4,6 +4,7 @@ const Class = require('./class');
 const ClassMapper = require('./class_mapper');
 const Type = require('./type');
 const Node = require('./node');
+const NodeMapper = require('./node_mapper');
 const Value = require('./value');
 
 module.exports = {
@@ -11,6 +12,8 @@ module.exports = {
     GraphMapper,
     Class,
     ClassMapper,
+    Node,
+    NodeMapper,
     Type,
     Value
 };

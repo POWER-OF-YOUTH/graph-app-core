@@ -63,6 +63,7 @@ class GraphMapper
      * @param {{name: String}} data 
      * @returns {Promise<Array<Graph>>}
      */
+    /*
      async where(data) {
         try {
             let session = this._driver.session();
@@ -84,6 +85,7 @@ class GraphMapper
             throw new DatabaseError();
         }
     }
+    */
 
     /**
      * Find graph by id or return null
@@ -133,7 +135,6 @@ class GraphMapper
             session.close();
         }
         catch (err) {
-            console.log(err);
             throw new DatabaseError();
         }
     }
@@ -157,7 +158,6 @@ class GraphMapper
             session.close();
         }
         catch (err) {
-            console.log(err);
             throw new DatabaseError();
         }
     }

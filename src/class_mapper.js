@@ -20,6 +20,14 @@ class ClassMapper
     }
 
     /**
+     * Get neo4j driver
+     * @returns {neo4j.Driver}
+     */
+    getDriver() {
+        return this._driver;
+    }
+
+    /**
      * Get all classes
      * @param {Graph} graph
      * @returns {Promise<Array<Class>>}
@@ -47,13 +55,12 @@ class ClassMapper
             return clss;
         }
         catch (err) {
-            console.log(err);
             throw new DatabaseError();
         }
     }
 
     /**
-     * Find class by id or return null
+     * Find class by name or return null
      * @param {Graph} graph
      * @param {String} name 
      * @returns {Promise<Class>}

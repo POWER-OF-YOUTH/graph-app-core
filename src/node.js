@@ -6,10 +6,13 @@ const Value = require('./value');
 class Node 
 {
     /**
-     * Private constructor
-     * @param {String} id
+     * 
+     * @param {Class} cls 
+     * @param {String} id 
+     * @param {Array<Value>} values 
      */
-    constructor(id, values) {
+    constructor(cls, id, values) {
+        this._cls = cls;
         this._id = id;
         this._values = values;
     }
@@ -22,9 +25,9 @@ class Node
     static new(cls) {
         let properties = cls.getProperties();
         let values = new Map();
-        for (property of properties)
-            values.set(property.getName(), Value.new(property.getType, property.getDefaultValue));
-        return new Node(uuid, values);
+        for (let property of properties)
+            values.set(property.getName(), Value.new(property.getType(), property.getDefaultValue()));
+        return new Node(cls, uuid(), values);
     }
 
     /**
@@ -33,6 +36,14 @@ class Node
      */
     getId() {
         return this._id;
+    }
+
+    /**
+     * Get class
+     * @returns {Class}
+     */
+    getClass() {
+        return this._cls;
     }
 
     /**
@@ -58,10 +69,12 @@ class Node
      * @returns {{id: String, values: Array<{name: String, type: String, value: any}>}}
      */
     toJSON() {
-        return {
-            id: this._id,
-            values: this._values.keys().map(k => { return { name: k, type: this._values.get(k).getType(), value: this._values.get(k).getValue() }})
+        let id = this._id;
+        let values = [];
+        for (const [key, value] of this._values) {
+            values.push({name: key, type: value.getType(), value: value.getValue()});
         }
+        return { id, values };
     }
 }
 

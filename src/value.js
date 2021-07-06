@@ -10,7 +10,7 @@ class Value
         this._value = value;
     }
 
-    static new() {
+    static new(type, value) {
         return new Value(type, value);
     }
 
