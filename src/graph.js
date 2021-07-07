@@ -83,7 +83,7 @@ class Graph
      * Convert to JSON
      * @returns {{id: String, name: String, description: String, date: String}}
      */
-    toJSON() { // TODO: 
+    toJSON() {
         return { 
             id: this._id, 
             name: this._name,  

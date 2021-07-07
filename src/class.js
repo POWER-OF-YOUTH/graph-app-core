@@ -21,10 +21,18 @@ class Class {
         return new Class(name, properties);
     }
 
+    /**
+     * Get class name
+     * @returns {String}
+     */
     getName() {
         return this._name;
     }
 
+    /**
+     * Get class properties
+     * @returns {Array<Property}
+     */
     getProperties() {
         return this._properties;
     }

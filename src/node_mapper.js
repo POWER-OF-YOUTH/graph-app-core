@@ -57,7 +57,7 @@ class NodeMapper
             let nodes = await Promise.all(dbResponse.records.map(async r => {
                 let data = r.get("data");
                 let cls = await clsMapper.findByName(graph, r.get("class").name);
-                let node = new Node(cls, data.id, data.values.map(v => new Value(v.type, v.value)));
+                let node = new Node(cls, data.id);
 
                 return node;
             }));
@@ -96,7 +96,7 @@ class NodeMapper
 
             let data = dbResponse.records[0].get("data");
             let cls = await clsMapper.findByName(graph, dbResponse.records[0].get("class").name);
-            let node = new Node(cls, data.id, data.values.map(v => new Value(v.type, v.value)));
+            let node = new Node(cls, data.id);
 
             return node;
         }
@@ -117,12 +117,12 @@ class NodeMapper
             let cls = node.getClass();
             let values = node.toJSON().values;
             let dbResponse = await session.run(`
-                MATCH (graph:Graph)-[:CONTAINS]->(class:Class)
-                WHERE graph.id = $graphId AND class.name = $className
-                MERGE (graph)-[:CONTAINS]->(node:Node { id: $nodeData.id })
-                MERGE (node)-[:REALIZE]->(class)
+                MATCH (g:Graph)-[:CONTAINS]->(c:Class)
+                WHERE g.id = $graphId AND c.name = $className
+                MERGE (g)-[:CONTAINS]->(n:Node { id: $nodeData.id })
+                MERGE (n)-[:REALIZE]->(c)
                 FOREACH (value IN $values | 
-                    MERGE (node)-[:HAVE]->(v:Value { name: value.name }) 
+                    MERGE (n)-[:HAVE]->(v:Value { name: value.name }) 
                     SET v = value)
             `, { graphId: graph.getId(), className: cls.getName(), nodeId: node.getId(), values, nodeData: node.toJSON() });
             session.close();

@@ -96,29 +96,26 @@ class ClassMapper
      * @param {Class} cls 
      * @returns {Promise<void>}
      */
-    async save(graph, cls) {
+    async save(graph, cls) { // TODO: Test
         try {
             let session = this._driver.session();
-            let dbResponse = await session.writeTransaction(tx => {
-                tx.run(`
-                    MATCH (g:Graph) 
-                    WHERE g.id = $graphId 
-                    CREATE (c:Class) 
-                    SET c = { name: $className, _unique_key: id(g) + "_" + $className }
-                    MERGE (g)-[:CONTAINS]->(c)
-                    FOREACH (property IN $properties | 
-                        CREATE (p:Property) 
-                        SET p = { name: property.name, type: property.type, defaultValue: property.defaultValue, _unique_key: id(c) + "_" + property.name } 
-                        MERGE (c)-[:HAVE]->(p))
-                `, { graphId: graph.getId(), className: cls.getName(), properties: cls.getProperties().map(p => p.toJSON())});
-                tx.run(`
-                    MATCH (g:Graph)-[:CONTAINS]-(c:Class)-[:HAVE]->(p:Property) 
-                    WHERE g.id = $graphId AND c.name = $className
-                    MATCH (t:Type) 
-                    WHERE t.name = p.type
-                    MERGE (p)-[:INSTANCE_OF]->(t)
-                `, { graphId: graph.getId(), className: cls.getName() });
-            });
+            let graphId = graph.getId();
+            let className = cls.getName();
+            let properties = cls.getProperties().map(p => p.toJSON())
+            let dbResponse = await session.run(`
+                MATCH (g:Graph)
+                WHERE g.id = $graphId
+                MERGE (g)-[:CONTAINS]->(c:Class { name: $className })
+                FOREACH (property IN $properties | 
+                    MERGE (c)-[:HAVE]->(p:Property { name: property.name })
+                    ON CREATE
+                        SET p = { name: property.name, type: property.type, defaultValue: property.defaultValue, _unique_key: id(c) + "_" + property.name })
+                WITH c
+                MATCH (c)-[:HAVE]->(p:Property)
+                MATCH (t:Type)
+                WHERE p.type = t.name
+                MERGE (p)-[:INSTANCE_OF]->(t)
+            `, { graphId, className, properties })
             session.close();
         }
         catch (err) {

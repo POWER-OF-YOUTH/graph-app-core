@@ -1,5 +1,12 @@
-const { Graph } = require('./src');
+const { Graph, GraphMapper, Class, ClassMapper, Node, NodeMapper, Type, Value } = require('./src');
 
 module.exports = {
-    Graph
+    Graph, 
+    GraphMapper, 
+    Class, 
+    ClassMapper, 
+    Node, 
+    NodeMapper, 
+    Type, 
+    Value 
 }
