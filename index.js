@@ -1,7 +1,12 @@
-const { Core, Property, Type } = require('./lib');
+const { Graph, GraphMapper, Class, ClassMapper, Node, NodeMapper, Type, Value } = require('./src');
 
 module.exports = {
-    Core,
-    Property,
-    Type
+    Graph, 
+    GraphMapper, 
+    Class, 
+    ClassMapper, 
+    Node, 
+    NodeMapper, 
+    Type, 
+    Value 
 }
