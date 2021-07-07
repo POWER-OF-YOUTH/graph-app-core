@@ -58,7 +58,7 @@ class Node
      * @returns {Value}
      */
     getValueObject(name) {
-        return this._values.get(name).getType();
+        return this._values.get(name);
     }
 
     /**
