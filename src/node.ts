@@ -1,31 +1,45 @@
+import { v4 as uuid } from 'uuid';
+
+import Template from './template';
 import Variable from './variable';
 
-class Template 
+class Node
 {
     private readonly _variablesMap: Map<string, Variable>;
-    private readonly _name: string;
+    private readonly _template: Template;
+    private readonly _id: string;
 
     /**
      * 
      * @param {Array<Variable>} variables
      * @param {string} name
      */
-    constructor(variables: Array<Variable>, name: string) {
-        if (variables == null || name == null)
+    constructor(template: Template, id: string = uuid()) {
+        if (template == null || id == null)
             throw new Error("Null reference exception!");
 
+        const variables: Array<Variable> = template.variables();
         this._variablesMap = new Map<string, Variable>();
         for (let variable of variables)
             this._variablesMap.set(variable.name, variable);
-        this._name = name;
+        this._template = template;
+        this._id = id;
     }
 
     /**
      * 
      * @returns {string}
      */
-    get name(): string {
-        return this._name;
+    get id(): string {
+        return this._id;
+    }
+
+    /**
+     * 
+     * @returns {Template}
+     */
+    get template(): Template {
+        return this._template;
     }
 
     /**
@@ -33,7 +47,7 @@ class Template
      * @param {string} name
      * @requires {Variable}
      */
-    variable(name: string): Variable | undefined {
+     variable(name: string): Variable | undefined {
         if (name == null)
             throw new Error("Null reference exception!");
         
@@ -54,4 +68,4 @@ class Template
     }
 }
 
-export default Template;
+export default Node;

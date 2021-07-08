@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const database_error_1 = __importDefault(require("./database_error"));
-class TemplateMapper {
+class NodeMapper {
     /**
      *
      * @param {Driver} driver
@@ -34,28 +34,30 @@ class TemplateMapper {
     }
     /**
      *
-     * @param {Template} template
+     * @param {Node} node
      * @returns {Promise<void>}
      */
-    save(template) {
+    save(node) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (template == null)
+            if (node == null)
                 throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {
                     data: {
                         graphId: this._graph.id,
-                        name: template.name,
-                        variables: template.variables().map(v => { return { name: v.name, type: v.value.type.name, data: JSON.stringify(v.value.data) }; })
+                        templateName: node.template.name,
+                        id: node.id,
+                        variables: node.template.variables().map(v => { return { name: v.name, type: v.value.type.name, data: JSON.stringify(v.value.data) }; })
                     }
                 };
                 const dbResponse = yield session.run(`
-                MATCH (g:Graph)
-                WHERE g.id = $data.graphId
-                MERGE (g)-[:CONTAINS]-(t:Template { name: $data.name })
+                MATCH (g:Graph)-[:CONTAINS]->(t:Template)
+                WHERE g.id = $data.graphId AND t.name = $data.templateName
+                MERGE (g)-[:CONTAINS]->(n:Node { id: $data.id })
+                MERGE (n)-[:REALIZE]->(t)
                 FOREACH (variable IN $data.variables | 
-                    MERGE (t)-[:HAVE]->(v:Variable { name: variable.name })
+                    MERGE (n)-[:HAVE]->(v:Variable { name: variable.name })
                     SET v = variable)
             `, parameters);
                 session.close();
@@ -67,26 +69,26 @@ class TemplateMapper {
     }
     /**
      *
-     * @param {Template} template
+     * @param {Node} node
      * @returns {Promise<void>}
      */
-    destroy(template) {
+    destroy(node) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (template == null)
+            if (node == null)
                 throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {
                     data: {
                         graphId: this._graph.id,
-                        name: template.name,
+                        id: node.id
                     }
                 };
                 const dbResponse = yield session.run(`
-                MATCH (g:Graph)-[:CONTAINS]->(t:Template)
-                WHERE g.id = $data.graphId AND t.name = $data.name
-                OPTIONAL MATCH (t)-[:HAVE]->(v:Variable)
-                DETACH DELETE v, t
+                MATCH (g:Graph)-[:CONTAINS]->(n:Node)
+                WHERE g.id = $data.graphId AND n.id = $data.id
+                OPTIONAL MATCH (n)-[:HAVE]->(v:Variable)
+                DETACH DELETE v, n
             `, parameters);
                 session.close();
             }
@@ -96,4 +98,4 @@ class TemplateMapper {
         });
     }
 }
-exports.default = TemplateMapper;
+exports.default = NodeMapper;

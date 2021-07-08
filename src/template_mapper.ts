@@ -59,7 +59,6 @@ class TemplateMapper implements IMapper<Template>
             session.close();
         }
         catch (err) {
-            console.log(err);
             throw new DatabaseError();
         }
     }
@@ -72,6 +71,8 @@ class TemplateMapper implements IMapper<Template>
     async destroy(template: Template): Promise<void> {
         if (template == null)
             throw new Error("Null reference exception!");
+        if (await this.hasImplementedNodes(template))
+            throw new DatabaseError("Template has implemented nodes!");
         try {
             const session = this._driver.session();
             const parameters = { 
@@ -89,7 +90,38 @@ class TemplateMapper implements IMapper<Template>
             session.close();
         }
         catch (err) {
-            console.log(err);
+            throw new DatabaseError();
+        }
+    }
+
+    /**
+     * 
+     * @private
+     * @param {Template} template
+     * @returns {Promise<boolean>}
+     */
+    private async hasImplementedNodes(template: Template): Promise<boolean> {
+        if (template == null)
+            throw new Error("Null reference exception!");
+        try {
+            const session = this._driver.session();
+            const parameters = { 
+                data: { 
+                    graphId: this._graph.id,
+                    name: template.name,
+                } 
+            }
+            const dbResponse = await session.run(`
+                MATCH (g:Graph)-[:CONTAINS]->(t:Template)
+                WHERE g.id = $data.graphId AND t.name = $data.name
+                MATCH (n:Node)-[:REALIZE]->(t)
+                RETURN n LIMIT 1
+            `, parameters);
+            session.close();
+
+            return dbResponse.records.length > 0;
+        }
+        catch (err) {
             throw new DatabaseError();
         }
     }

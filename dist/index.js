@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Variable = exports.Template = exports.TemplateMapper = exports.StringValue = exports.StringType = exports.Graph = exports.GraphMapper = exports.DatabaseError = void 0;
+exports.NodeMapper = exports.Node = exports.Relation = exports.Variable = exports.Template = exports.TemplateMapper = exports.StringValue = exports.StringType = exports.Graph = exports.GraphMapper = exports.DatabaseError = void 0;
 const database_error_1 = __importDefault(require("./database_error"));
 exports.DatabaseError = database_error_1.default;
 const graph_mapper_1 = __importDefault(require("./graph_mapper"));
@@ -20,3 +20,9 @@ const template_1 = __importDefault(require("./template"));
 exports.Template = template_1.default;
 const variable_1 = __importDefault(require("./variable"));
 exports.Variable = variable_1.default;
+const relation_1 = __importDefault(require("./relation"));
+exports.Relation = relation_1.default;
+const node_1 = __importDefault(require("./node"));
+exports.Node = node_1.default;
+const node_mapper_1 = __importDefault(require("./node_mapper"));
+exports.NodeMapper = node_mapper_1.default;

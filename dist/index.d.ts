@@ -9,4 +9,7 @@ import StringValue from './string_value';
 import TemplateMapper from './template_mapper';
 import Template from './template';
 import Variable from './variable';
-export { DatabaseError, GraphMapper, Graph, IMapper, IType, IValue, StringType, StringValue, TemplateMapper, Template, Variable };
+import Relation from './relation';
+import Node from './node';
+import NodeMapper from './node_mapper';
+export { DatabaseError, GraphMapper, Graph, IMapper, IType, IValue, StringType, StringValue, TemplateMapper, Template, Variable, Relation, Node, NodeMapper };

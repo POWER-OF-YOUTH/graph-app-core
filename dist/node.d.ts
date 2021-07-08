@@ -1,18 +1,25 @@
+import Template from './template';
 import Variable from './variable';
-declare class Template {
+declare class Node {
     private readonly _variablesMap;
-    private readonly _name;
+    private readonly _template;
+    private readonly _id;
     /**
      *
      * @param {Array<Variable>} variables
      * @param {string} name
      */
-    constructor(variables: Array<Variable>, name: string);
+    constructor(template: Template, id?: string);
     /**
      *
      * @returns {string}
      */
-    get name(): string;
+    get id(): string;
+    /**
+     *
+     * @returns {Template}
+     */
+    get template(): Template;
     /**
      *
      * @param {string} name
@@ -25,4 +32,4 @@ declare class Template {
      */
     variables(): Array<Variable>;
 }
-export default Template;
+export default Node;

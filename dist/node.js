@@ -1,25 +1,35 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-class Template {
+const uuid_1 = require("uuid");
+class Node {
     /**
      *
      * @param {Array<Variable>} variables
      * @param {string} name
      */
-    constructor(variables, name) {
-        if (variables == null || name == null)
+    constructor(template, id = uuid_1.v4()) {
+        if (template == null || id == null)
             throw new Error("Null reference exception!");
+        const variables = template.variables();
         this._variablesMap = new Map();
         for (let variable of variables)
             this._variablesMap.set(variable.name, variable);
-        this._name = name;
+        this._template = template;
+        this._id = id;
     }
     /**
      *
      * @returns {string}
      */
-    get name() {
-        return this._name;
+    get id() {
+        return this._id;
+    }
+    /**
+     *
+     * @returns {Template}
+     */
+    get template() {
+        return this._template;
     }
     /**
      *
@@ -43,4 +53,4 @@ class Template {
         return variables;
     }
 }
-exports.default = Template;
+exports.default = Node;
