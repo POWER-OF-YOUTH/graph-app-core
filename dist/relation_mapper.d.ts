@@ -1,8 +1,8 @@
 import { Driver } from 'neo4j-driver';
 import Graph from './graph';
 import IMapper from './i_mapper';
-import Template from './template';
-declare class TemplateMapper implements IMapper<Template> {
+import Relation from './relation';
+declare class RelationMapper implements IMapper<Relation> {
     private readonly _driver;
     private readonly _graph;
     /**
@@ -18,22 +18,15 @@ declare class TemplateMapper implements IMapper<Template> {
     get driver(): Driver;
     /**
      *
-     * @param {Template} template
+     * @param {Relation}
      * @returns {Promise<void>}
      */
-    save(template: Template): Promise<void>;
+    save(relation: Relation): Promise<void>;
     /**
      *
-     * @param {Template} template
+     * @param {Relation} relation
      * @returns {Promise<void>}
      */
-    destroy(template: Template): Promise<void>;
-    /**
-     *
-     * @private
-     * @param {Template} template
-     * @returns {Promise<boolean>}
-     */
-    private hasImplementedNodes;
+    destroy(relation: Relation): Promise<void>;
 }
-export default TemplateMapper;
+export default RelationMapper;

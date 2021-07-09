@@ -11,6 +11,8 @@ import Template from './template';
 import Variable from './variable';
 import Node from './node';
 import NodeMapper from './node_mapper';
+import Relation from './relation';
+import RelationMapper from './relation_mapper';
 
 export {
     DatabaseError,
@@ -25,5 +27,7 @@ export {
     Template,
     Variable,
     Node,
-    NodeMapper
+    NodeMapper,
+    Relation,
+    RelationMapper
 }

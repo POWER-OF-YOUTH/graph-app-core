@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const database_error_1 = __importDefault(require("./database_error"));
-class TemplateMapper {
+class RelationMapper {
     /**
      *
      * @param {Driver} driver
@@ -34,29 +34,34 @@ class TemplateMapper {
     }
     /**
      *
-     * @param {Template} template
+     * @param {Relation}
      * @returns {Promise<void>}
      */
-    save(template) {
+    save(relation) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (template == null)
+            if (relation == null)
                 throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {
                     data: {
                         graphId: this._graph.id,
-                        name: template.name,
-                        variables: template.variables().map(v => { return { name: v.name, type: v.value.type.name, data: JSON.stringify(v.value.data) }; })
+                        fromId: relation.from.id,
+                        toId: relation.to.id,
+                        name: relation.name,
+                        id: relation.id
                     }
                 };
                 const dbResponse = yield session.run(`
                 MATCH (g:Graph)
                 WHERE g.id = $data.graphId
-                MERGE (g)-[:CONTAINS]-(t:Template { name: $data.name })
-                FOREACH (variable IN $data.variables | 
-                    MERGE (t)-[:HAVE]->(v:Variable { name: variable.name })
-                    SET v = variable)
+                MATCH (g)-[:CONTAINS]->(n1) 
+                WHERE n1.id = $data.fromId
+                MATCH (g)-[:CONTAINS]->(n2)
+                WHERE n2.id = $data.toId
+                MERGE (n1)-[rel:RELATION {id: $data.id}]->(n2)
+                SET rel.name = $data.name
+                RETURN g, n1, n2, rel
             `, parameters);
                 session.close();
             }
@@ -67,67 +72,42 @@ class TemplateMapper {
     }
     /**
      *
-     * @param {Template} template
+     * @param {Relation} relation
      * @returns {Promise<void>}
      */
-    destroy(template) {
+    destroy(relation) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (template == null)
-                throw new Error("Null reference exception!");
-            if (yield this.hasImplementedNodes(template))
-                throw new database_error_1.default("Template has implemented nodes!");
-            try {
-                const session = this._driver.session();
-                const parameters = {
-                    data: {
-                        graphId: this._graph.id,
-                        name: template.name,
-                    }
-                };
-                const dbResponse = yield session.run(`
-                MATCH (g:Graph)-[:CONTAINS]->(t:Template)
-                WHERE g.id = $data.graphId AND t.name = $data.name
-                OPTIONAL MATCH (t)-[:HAVE]->(v:Variable)
-                DETACH DELETE v, t
-            `, parameters);
-                session.close();
-            }
-            catch (err) {
-                throw new database_error_1.default();
-            }
-        });
-    }
-    /**
-     *
-     * @private
-     * @param {Template} template
-     * @returns {Promise<boolean>}
-     */
-    hasImplementedNodes(template) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (template == null)
+            if (relation == null)
                 throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {
                     data: {
                         graphId: this._graph.id,
-                        name: template.name,
+                        fromId: relation.from.id,
+                        toId: relation.to.id,
+                        name: relation.name,
+                        id: relation.id
                     }
                 };
                 const dbResponse = yield session.run(`
-                MATCH (g:Graph)-[:CONTAINS]->(t:Template)
-                WHERE g.id = $data.graphId AND t.name = $data.name
-                MATCH (n:Node)-[:REALIZE]->(t)
-                RETURN n LIMIT 1
+                MATCH (g:Graph)
+                WHERE g.id = $data.graphId
+                MATCH (g)-[:CONTAINS]->(n1) 
+                WHERE n1.id = $data.fromId
+                MATCH (g)-[:CONTAINS]->(n2)
+                WHERE n2.id = $data.toId
+                MATCH (n1)-[rel:RELATION]->(n2)
+                WHERE rel.id = $data.id
+                DELETE rel
             `, parameters);
                 session.close();
-                return dbResponse.records.length > 0;
             }
             catch (err) {
+                console.log(err);
                 throw new database_error_1.default();
             }
         });
     }
 }
-exports.default = TemplateMapper;
+exports.default = RelationMapper;
