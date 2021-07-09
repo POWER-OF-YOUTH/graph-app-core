@@ -14,6 +14,19 @@ declare class GraphMapper implements IMapper<Graph> {
     get driver(): Driver;
     /**
      *
+     * @returns {Promise<Array<Graph>>}
+     */
+    all(): Promise<Array<Graph>>;
+    /**
+     *
+     * @param {{id: string}} d
+     * @returns {Promise<Graph | null>}
+     */
+    findBy(d: {
+        id: string;
+    }): Promise<Graph | null>;
+    /**
+     *
      * @param {Graph} graph
      * @returns {Promise<void>}
      */

@@ -13,6 +13,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const database_error_1 = __importDefault(require("./database_error"));
+const node_mapper_1 = __importDefault(require("./node_mapper"));
+const relation_1 = __importDefault(require("./relation"));
 class RelationMapper {
     /**
      *
@@ -31,6 +33,84 @@ class RelationMapper {
      */
     get driver() {
         return this._driver;
+    }
+    /**
+     *
+     * @returns {Promise<Array<Relation>>}
+     */
+    all() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const session = this._driver.session();
+                const parameters = {
+                    data: {
+                        graphId: this._graph.id
+                    }
+                };
+                const dbResponse = yield session.run(`
+                MATCH (g:Graph)
+                WHERE g.id = $data.graphId
+                MATCH (g)-[:CONTAINS]->(n1:Node)
+                MATCH (g)-[:CONTAINS]->(n2:Node)
+                WHERE n1 <> n2
+                MATCH (n1)-[rel:RELATION]->(n2)
+                RETURN properties(rel) AS data, properties(n1) AS from, properties(n2) AS to
+            `, parameters);
+                session.close();
+                const nm = new node_mapper_1.default(this._driver, this._graph);
+                const relations = Promise.all(dbResponse.records.map((record) => __awaiter(this, void 0, void 0, function* () {
+                    const data = record.get("data");
+                    const from = record.get("from");
+                    const to = record.get("to");
+                    const relation = new relation_1.default((yield nm.findBy({ id: from.id })), (yield nm.findBy({ id: to.id })), data.name, data.id);
+                    return relation;
+                })));
+                return relations;
+            }
+            catch (err) {
+                throw new database_error_1.default();
+            }
+        });
+    }
+    /**
+     *
+     * @param {{id: string}} d
+     * @returns {Promise<Relation | null>}
+     */
+    findBy(d) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const session = this._driver.session();
+                const parameters = {
+                    data: {
+                        graphId: this._graph.id,
+                        id: d.id
+                    }
+                };
+                const dbResponse = yield session.run(`
+                MATCH (g:Graph)
+                WHERE g.id = $data.graphId
+                MATCH (g)-[:CONTAINS]->(n1:Node)
+                MATCH (g)-[:CONTAINS]->(n2:Node)
+                WHERE n1 <> n2
+                MATCH (n1)-[rel:RELATION]->(n2)
+                WHERE rel.id = $data.id
+                RETURN properties(rel) AS data, properties(n1) AS from, properties(n2) AS to
+            `, parameters);
+                session.close();
+                if (dbResponse.records.length === 0)
+                    return null;
+                const nm = new node_mapper_1.default(this._driver, this._graph);
+                const data = dbResponse.records[0].get("data");
+                const from = dbResponse.records[0].get("from");
+                const to = dbResponse.records[0].get("to");
+                const relation = new relation_1.default((yield nm.findBy({ id: from.id })), (yield nm.findBy({ id: to.id })), data.name, data.id);
+                return relation;
+            }
+            catch (err) {
+                throw new database_error_1.default();
+            }
+        });
     }
     /**
      *

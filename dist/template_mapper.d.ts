@@ -18,6 +18,19 @@ declare class TemplateMapper implements IMapper<Template> {
     get driver(): Driver;
     /**
      *
+     * @returns {Promise<Array<Template>>}
+     */
+    all(): Promise<Array<Template>>;
+    /**
+     *
+     * @param {{id: string}} d
+     * @returns {Promise<Template | null>}
+     */
+    findBy(d: {
+        name: string;
+    }): Promise<Template | null>;
+    /**
+     *
      * @param {Template} template
      * @returns {Promise<void>}
      */

@@ -18,6 +18,19 @@ declare class NodeMapper implements IMapper<Node> {
     get driver(): Driver;
     /**
      *
+     * @returns {Promise<Array<Node>>}
+     */
+    all(): Promise<Array<Node>>;
+    /**
+     *
+     * @param {{id: string}} d
+     * @returns {Promise<Node | null>}
+     */
+    findBy(d: {
+        id: string;
+    }): Promise<Node | null>;
+    /**
+     *
      * @param {Node} node
      * @returns {Promise<void>}
      */

@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const database_error_1 = __importDefault(require("./database_error"));
+const graph_1 = __importDefault(require("./graph"));
 class GraphMapper {
     /**
      *
@@ -28,6 +29,65 @@ class GraphMapper {
      */
     get driver() {
         return this._driver;
+    }
+    /**
+     *
+     * @returns {Promise<Array<Graph>>}
+     */
+    all() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const session = this._driver.session();
+                const parameters = {};
+                const dbResponse = yield session.run(`
+                MATCH (g:Graph)
+                RETURN properties(g) AS data 
+            `, parameters);
+                session.close();
+                const graphs = dbResponse.records.map(record => {
+                    const data = record.get("data");
+                    const graph = new graph_1.default(data.name, data.description, data.id, data.date);
+                    return graph;
+                });
+                return graphs;
+            }
+            catch (err) {
+                throw new database_error_1.default();
+            }
+        });
+    }
+    /**
+     *
+     * @param {{id: string}} d
+     * @returns {Promise<Graph | null>}
+     */
+    findBy(d) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (d == null || d.id == null)
+                throw new Error("Null reference exception!");
+            try {
+                const session = this._driver.session();
+                const parameters = {
+                    data: {
+                        graphId: d.id
+                    }
+                };
+                const dbResponse = yield session.run(`
+                MATCH (g:Graph)
+                WHERE g.id = $data.graphId
+                RETURN properties(g) AS data 
+            `, parameters);
+                session.close();
+                if (dbResponse.records.length === 0)
+                    return null;
+                const data = dbResponse.records[0].get("data");
+                const graph = new graph_1.default(data.name, data.description, data.id, data.date);
+                return graph;
+            }
+            catch (err) {
+                throw new database_error_1.default();
+            }
+        });
     }
     /**
      *

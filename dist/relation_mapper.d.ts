@@ -18,6 +18,19 @@ declare class RelationMapper implements IMapper<Relation> {
     get driver(): Driver;
     /**
      *
+     * @returns {Promise<Array<Relation>>}
+     */
+    all(): Promise<Array<Relation>>;
+    /**
+     *
+     * @param {{id: string}} d
+     * @returns {Promise<Relation | null>}
+     */
+    findBy(d: {
+        id: string;
+    }): Promise<Relation | null>;
+    /**
+     *
      * @param {Relation}
      * @returns {Promise<void>}
      */
