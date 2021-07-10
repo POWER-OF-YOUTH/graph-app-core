@@ -74,6 +74,52 @@ class RelationMapper {
     }
     /**
      *
+     * @param {from: Node | undefined, to: Node | undefined} d
+     * @returns {Promise<Array<Relation>>}
+     */
+    where(d) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (d == null || (d.from == null && d.to == null))
+                throw new Error("Null reference exception!");
+            try {
+                const session = this._driver.session();
+                const parameters = {
+                    data: {
+                        graphId: this._graph.id,
+                        fromId: d.from,
+                        toId: d.to
+                    }
+                };
+                const dbResponse = yield session.run(`
+                MATCH (g:Graph)
+                WHERE g.id = $data.graphId
+                MATCH (g)-[:CONTAINS]->(n1:Node)
+                ${d.from ? "WHERE n1.id = $data.fromId" : ""}
+                MATCH (g)-[:CONTAINS]->(n2:Node)
+                ${d.to ? "WHERE n2.id = $data.toId" : ""}
+                MATCH (n1)-[rel:RELATION]->(n2)
+                WHERE n1 <> n2
+                RETURN properties(rel) AS data, properties(n1) AS from, properties(n2) AS to
+            `, parameters);
+                session.close();
+                const nm = new node_mapper_1.default(this._driver, this._graph);
+                const relations = Promise.all(dbResponse.records.map((record) => __awaiter(this, void 0, void 0, function* () {
+                    const data = record.get("data");
+                    const from = record.get("from");
+                    const to = record.get("to");
+                    const relation = new relation_1.default((yield nm.findBy({ id: from.id })), (yield nm.findBy({ id: to.id })), data.name, data.id);
+                    return relation;
+                })));
+                return relations;
+            }
+            catch (err) {
+                console.log(err);
+                throw new database_error_1.default();
+            }
+        });
+    }
+    /**
+     *
      * @param {{id: string}} d
      * @returns {Promise<Relation | null>}
      */

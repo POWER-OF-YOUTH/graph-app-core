@@ -71,6 +71,41 @@ class NodeMapper {
             }
         });
     }
+    where(d) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (d == null || d.template == null)
+                throw new Error("Null reference exception!");
+            try {
+                const session = this._driver.session();
+                const parameters = {
+                    data: {
+                        graphId: this._graph.id,
+                        templateName: d.template.name
+                    }
+                };
+                const dbResponse = yield session.run(`
+                MATCH (g:Graph)
+                WHERE g.id = $data.graphId
+                MATCH (g:Graph)-[:CONTAINS]->(n:Node)
+                MATCH (n)-[:REALIZE]->(t:Template)
+                WHERE t.name = $data.templateName
+                OPTIONAL MATCH (n)-[:HAVE]->(v:Variable)
+                RETURN properties(t) AS template, properties(n) AS data, collect(properties(v)) AS variables
+            `, parameters);
+                session.close();
+                const nodes = yield Promise.all(dbResponse.records.map((record) => __awaiter(this, void 0, void 0, function* () {
+                    const data = record.get("data");
+                    const variables = record.get("variables");
+                    const node = new node_1.default(d.template, data.id);
+                    return node;
+                })));
+                return nodes;
+            }
+            catch (err) {
+                throw new database_error_1.default();
+            }
+        });
+    }
     /**
      *
      * @param {{id: string}} d

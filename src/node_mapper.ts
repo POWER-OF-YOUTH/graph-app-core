@@ -75,6 +75,44 @@ class NodeMapper implements IMapper<Node>
         }
     }
 
+    async where(d: {template: Template | undefined}) {
+        if (d == null || d.template == null) 
+            throw new Error("Null reference exception!");
+        try {
+            const session = this._driver.session();
+            const parameters = { 
+                data: {
+                    graphId: this._graph.id,
+                    templateName: d.template.name
+                }
+            };
+            const dbResponse = await session.run(`
+                MATCH (g:Graph)
+                WHERE g.id = $data.graphId
+                MATCH (g:Graph)-[:CONTAINS]->(n:Node)
+                MATCH (n)-[:REALIZE]->(t:Template)
+                WHERE t.name = $data.templateName
+                OPTIONAL MATCH (n)-[:HAVE]->(v:Variable)
+                RETURN properties(t) AS template, properties(n) AS data, collect(properties(v)) AS variables
+            `, parameters);
+            session.close();
+
+            const nodes = await Promise.all(dbResponse.records.map(async (record) => {
+                const data: {id: string} = record.get("data");
+                const variables: Array<{name: string, type: string, data: string}> = record.get("variables");
+
+                const node = new Node(d.template!, data.id)
+        
+                return node
+            }));
+
+            return nodes;
+        }
+        catch (err) {
+            throw new DatabaseError();
+        }
+    }
+
     /**
      * 
      * @param {{id: string}} d

@@ -1,6 +1,7 @@
 import { Driver } from 'neo4j-driver';
 import Graph from './graph';
 import IMapper from './i_mapper';
+import Node from './node';
 import Relation from './relation';
 declare class RelationMapper implements IMapper<Relation> {
     private readonly _driver;
@@ -21,6 +22,15 @@ declare class RelationMapper implements IMapper<Relation> {
      * @returns {Promise<Array<Relation>>}
      */
     all(): Promise<Array<Relation>>;
+    /**
+     *
+     * @param {from: Node | undefined, to: Node | undefined} d
+     * @returns {Promise<Array<Relation>>}
+     */
+    where(d: {
+        from: Node | undefined;
+        to: Node | undefined;
+    }): Promise<Array<Relation>>;
     /**
      *
      * @param {{id: string}} d

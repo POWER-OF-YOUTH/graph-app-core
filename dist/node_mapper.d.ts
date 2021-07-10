@@ -2,6 +2,7 @@ import { Driver } from 'neo4j-driver';
 import Graph from './graph';
 import IMapper from './i_mapper';
 import Node from './node';
+import Template from './template';
 declare class NodeMapper implements IMapper<Node> {
     private readonly _driver;
     private readonly _graph;
@@ -21,6 +22,9 @@ declare class NodeMapper implements IMapper<Node> {
      * @returns {Promise<Array<Node>>}
      */
     all(): Promise<Array<Node>>;
+    where(d: {
+        template: Template | undefined;
+    }): Promise<Node[]>;
     /**
      *
      * @param {{id: string}} d
