@@ -1,6 +1,6 @@
 {
   "name": "graph-app-core",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Библиотека, предоставляющая удобный интерфейс для взаимодействия с СУБД «Neo4j».",
   "main": "./dist/index.js",
   "exports": "./dist/index.js",
