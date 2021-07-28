@@ -13,32 +13,16 @@ class NodeMapper implements IMapper<Node>
     private readonly _driver: Driver;
     private readonly _graph: Graph;
 
-    /**
-     * 
-     * @param {Driver} driver
-     * @param {Graph} graph
-     */
     constructor(driver: Driver, graph: Graph) {
-        if (driver == null || graph == null)
-            throw new Error("Null reference exception!");
-
         this._driver = driver;
         this._graph = graph;
     }
 
-    /**
-     * 
-     * @returns {Driver}
-     */
     get driver(): Driver {
         return this._driver;
     }
 
-    /**
-     * 
-     * @returns {Promise<Array<Node>>}
-     */
-     async all(): Promise<Array<Node>> {
+    async all(): Promise<Array<Node>> {
         try {
             const session = this._driver.session();
             const parameters = { 
@@ -59,11 +43,17 @@ class NodeMapper implements IMapper<Node>
             const tm = new TemplateMapper(this._driver, this._graph);
 
             const nodes = await Promise.all(dbResponse.records.map(async (record) => {
-                const template: {name: string} = record.get("template"); 
-                const data: {id: string} = record.get("data");
+                const template: {id: string, name: string, representation: string} = record.get("template"); 
+                const data: {id: string, x: number, y: number} = record.get("data");
                 const variables: Array<{name: string, type: string, data: string}> = record.get("variables");
 
-                const node = new Node((await tm.findBy({name: template.name}))!, data.id)
+                const node = new Node(
+                    (await tm.findBy({id: template.id}))!, 
+                    data.x, 
+                    data.y, 
+                    data.id,
+                    variables.map(data => VariableMaker.make(data))
+                );
         
                 return node
             }));
@@ -75,15 +65,13 @@ class NodeMapper implements IMapper<Node>
         }
     }
 
-    async where(d: {template: Template | undefined}) {
-        if (d == null || d.template == null) 
-            throw new Error("Null reference exception!");
+    async where({ template }: {template: Template}): Promise<Array<Node>> {
         try {
             const session = this._driver.session();
             const parameters = { 
                 data: {
                     graphId: this._graph.id,
-                    templateName: d.template.name
+                    templateName: template.name
                 }
             };
             const dbResponse = await session.run(`
@@ -98,10 +86,16 @@ class NodeMapper implements IMapper<Node>
             session.close();
 
             const nodes = await Promise.all(dbResponse.records.map(async (record) => {
-                const data: {id: string} = record.get("data");
+                const data: {id: string, x: number, y: number} = record.get("data");
                 const variables: Array<{name: string, type: string, data: string}> = record.get("variables");
 
-                const node = new Node(d.template!, data.id)
+                const node = new Node(
+                    template, 
+                    data.x, 
+                    data.y, 
+                    data.id,
+                    variables.map(data => VariableMaker.make(data))
+                );
         
                 return node
             }));
@@ -113,20 +107,13 @@ class NodeMapper implements IMapper<Node>
         }
     }
 
-    /**
-     * 
-     * @param {{id: string}} d
-     * @returns {Promise<Node | null>}
-     */
-    async findBy(d: {id: string}): Promise<Node | null> {
-        if (d == null || d.id == null)
-            throw new Error("Null reference exception!");
+    async findBy({ id }: {id: string}): Promise<Node | null> {
         try {
             const session = this._driver.session();
             const parameters = { 
                 data: {
                     graphId: this._graph.id,
-                    id: d.id
+                    id
                 }
             };
             const dbResponse = await session.run(`
@@ -143,11 +130,17 @@ class NodeMapper implements IMapper<Node>
 
             const tm = new TemplateMapper(this._driver, this._graph);
 
-            const template: {name: string} = dbResponse.records[0].get("template"); 
-            const data: {id: string} = dbResponse.records[0].get("data");
+            const template: {id: string, name: string, representation: string} = dbResponse.records[0].get("template"); 
+            const data: {id: string, x: number, y: number} = dbResponse.records[0].get("data");
             const variables: Array<{name: string, type: string, data: string}> = dbResponse.records[0].get("variables");
 
-            const node = new Node((await tm.findBy({name: template.name}))!, data.id)
+            const node = new Node(
+                (await tm.findBy({id: template.id}))!, 
+                data.x, 
+                data.y, 
+                data.id,
+                variables.map(data => VariableMaker.make(data))
+            );
     
             return node
         }
@@ -156,14 +149,7 @@ class NodeMapper implements IMapper<Node>
         }
     }
 
-    /**
-     * 
-     * @param {Node} node
-     * @returns {Promise<void>}
-     */
     async save(node: Node): Promise<void> {
-        if (node == null)
-            throw new Error("Null reference exception!");
         try {
             const session = this._driver.session();
             const parameters = {
@@ -171,6 +157,8 @@ class NodeMapper implements IMapper<Node>
                     graphId: this._graph.id,
                     templateName: node.template.name,
                     id: node.id,
+                    x: node.x,
+                    y: node.y,
                     variables: node.template.variables().map(v => { return { name: v.name, type: v.value.type.name, data: JSON.stringify(v.value.data) } })
                 }
             };
@@ -190,14 +178,7 @@ class NodeMapper implements IMapper<Node>
         }
     }
 
-    /**
-     * 
-     * @param {Node} node
-     * @returns {Promise<void>}
-     */
     async destroy(node: Node): Promise<void> {
-        if (node == null)
-            throw new Error("Null reference exception!");
         try {
             const session = this._driver.session();
             const parameters = {

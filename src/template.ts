@@ -1,49 +1,51 @@
-import Variable from './variable';
+import { v4 as uuid } from 'uuid';
 
-class Template 
+import { Variable, VariableData } from './variable';
+import { TemplateRepresentation, TemplateRepresentationData } from './template_representation';
+
+type TemplateData = {
+    name: string,
+    id: string,
+    representation: TemplateRepresentationData,
+    variables: Array<VariableData>
+};
+
+class Template
 {
     private readonly _variablesMap: Map<string, Variable>;
     private readonly _name: string;
+    private readonly _id: string;
+    private _representation: TemplateRepresentation;
 
-    /**
-     * 
-     * @param {Array<Variable>} variables
-     * @param {string} name
-     */
-    constructor(variables: Array<Variable>, name: string) {
-        if (variables == null || name == null)
-            throw new Error("Null reference exception!");
-
+    constructor(name: string, variables: Array<Variable>, representation: TemplateRepresentation = new TemplateRepresentation(), id = uuid()) {
         this._variablesMap = new Map<string, Variable>();
         for (let variable of variables)
             this._variablesMap.set(variable.name, variable);
         this._name = name;
+        this._representation = representation;
+        this._id = id;
     }
 
-    /**
-     * 
-     * @returns {string}
-     */
     get name(): string {
         return this._name;
     }
 
-    /**
-     * 
-     * @param {string} name
-     * @requires {Variable}
-     */
+    get id(): string {
+        return this._id;
+    }
+
+    get representation(): TemplateRepresentation {
+        return this._representation;
+    }
+
+    set representation(value: TemplateRepresentation) {
+        this._representation = value;
+    }
+
     variable(name: string): Variable | undefined {
-        if (name == null)
-            throw new Error("Null reference exception!");
-        
         return this._variablesMap.get(name);
     }
 
-    /**
-     * 
-     * @returns {Array<Variable}
-     */
     variables(): Array<Variable> {
         const variablesIter = this._variablesMap.values();
         const variables: Array<Variable> = [];
@@ -52,6 +54,16 @@ class Template
         
         return variables;
     }
+
+    toJSON(): TemplateData {
+        return {
+            name: this._name,
+            id: this._id,
+            representation: this._representation.toJSON(),
+            variables: this.variables().map(v => v.toJSON())
+        }
+    }
 }
 
 export default Template;
+export { Template, TemplateData };

@@ -1,5 +1,6 @@
 node_modules/
 package-lock.json
 index_tests.js
+index_tests.ts
 test/authData.json
 ignore/

@@ -12,11 +12,6 @@ class RelationMapper implements IMapper<Relation>
     private readonly _driver: Driver;
     private readonly _graph: Graph;
 
-    /**
-     * 
-     * @param {Driver} driver
-     * @param {Graph} graph
-     */
     constructor(driver: Driver, graph: Graph) {
         if (driver == null || graph == null)
             throw new Error("Null reference exception!");
@@ -25,18 +20,10 @@ class RelationMapper implements IMapper<Relation>
         this._graph = graph;
     }
 
-    /**
-     * 
-     * @returns {Driver}
-     */
     get driver(): Driver {
         return this._driver;
     }
 
-    /**
-     * 
-     * @returns {Promise<Array<Relation>>}
-     */
     async all(): Promise<Array<Relation>> {
         try {
             const session = this._driver.session();
@@ -75,30 +62,23 @@ class RelationMapper implements IMapper<Relation>
         }
     }
 
-    /**
-     * 
-     * @param {from: Node | undefined, to: Node | undefined} d
-     * @returns {Promise<Array<Relation>>}
-     */
-    async where(d: {from: Node | undefined, to: Node | undefined}): Promise<Array<Relation>> {
-        if (d == null || (d.from == null && d.to == null))
-            throw new Error("Null reference exception!");
+    async where({ from, to }: {from: Node | undefined, to: Node | undefined}): Promise<Array<Relation>> {
         try {
             const session = this._driver.session();
             const parameters = {
                 data: {
                     graphId: this._graph.id,
-                    fromId: d.from,
-                    toId: d.to
+                    fromId: from?.id,
+                    toId: to?.id
                 }
             };
             const dbResponse = await session.run(`
                 MATCH (g:Graph)
                 WHERE g.id = $data.graphId
                 MATCH (g)-[:CONTAINS]->(n1:Node)
-                ${d.from ? "WHERE n1.id = $data.fromId" : ""}
+                ${from ? "WHERE n1.id = $data.fromId" : ""}
                 MATCH (g)-[:CONTAINS]->(n2:Node)
-                ${d.to ? "WHERE n2.id = $data.toId": ""}
+                ${to ? "WHERE n2.id = $data.toId": ""}
                 MATCH (n1)-[rel:RELATION]->(n2)
                 WHERE n1 <> n2
                 RETURN properties(rel) AS data, properties(n1) AS from, properties(n2) AS to
@@ -112,7 +92,12 @@ class RelationMapper implements IMapper<Relation>
                 const from: {id: string} = record.get("from");
                 const to: {id: string} = record.get("to");
 
-                const relation = new Relation((await nm.findBy({id: from.id}))!, (await nm.findBy({id: to.id}))!, data.name, data.id);
+                const relation = new Relation(
+                    (await nm.findBy({id: from.id}))!, 
+                    (await nm.findBy({id: to.id}))!, 
+                    data.name, 
+                    data.id
+                );
 
                 return relation;
             }));
@@ -120,23 +105,17 @@ class RelationMapper implements IMapper<Relation>
             return relations;
         }
         catch (err) {
-            console.log(err);
             throw new DatabaseError();
         }
     }
 
-    /**
-     * 
-     * @param {{id: string}} d
-     * @returns {Promise<Relation | null>}
-     */
-    async findBy(d: {id: string}): Promise<Relation | null> {
+    async findBy({ id }: {id: string}): Promise<Relation | null> {
         try {
             const session = this._driver.session();
             const parameters = {
                 data: {
                     graphId: this._graph.id,
-                    id: d.id
+                    id
                 }
             };
             const dbResponse = await session.run(`
@@ -160,7 +139,12 @@ class RelationMapper implements IMapper<Relation>
             const from: {id: string} = dbResponse.records[0].get("from");
             const to: {id: string} = dbResponse.records[0].get("to");
 
-            const relation = new Relation((await nm.findBy({id: from.id}))!, (await nm.findBy({id: to.id}))!, data.name, data.id);
+            const relation = new Relation(
+                (await nm.findBy({id: from.id}))!, 
+                (await nm.findBy({id: to.id}))!, 
+                data.name, 
+                data.id
+            );
 
             return relation;
         }
@@ -169,14 +153,7 @@ class RelationMapper implements IMapper<Relation>
         }
     }
 
-    /**
-     * 
-     * @param {Relation}
-     * @returns {Promise<void>}
-     */
     async save(relation: Relation): Promise<void> {
-        if (relation == null)
-            throw new Error("Null reference exception!");
         try {
             const session = this._driver.session();
             const parameters = {
@@ -206,14 +183,7 @@ class RelationMapper implements IMapper<Relation>
         }
     }
 
-    /**
-     * 
-     * @param {Relation} relation
-     * @returns {Promise<void>}
-     */
     async destroy(relation: Relation): Promise<void> {
-        if (relation == null)
-            throw new Error("Null reference exception!");
         try {
             const session = this._driver.session();
             const parameters = {
@@ -239,7 +209,6 @@ class RelationMapper implements IMapper<Relation>
             session.close()
         }
         catch(err) {
-            console.log(err);
             throw new DatabaseError();
         }
     }

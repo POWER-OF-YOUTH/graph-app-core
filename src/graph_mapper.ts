@@ -8,28 +8,14 @@ class GraphMapper implements IMapper<Graph>
 {
     private readonly _driver: Driver;
 
-    /**
-     * 
-     * @param {Driver} driver
-     */
     constructor(driver: Driver) {
-        if (driver == null)
-            throw new Error("Null reference exception!");
-
         this._driver = driver;
     }
 
-    /**
-     * @returns {Driver}
-     */
     get driver(): Driver {
         return this._driver;
     }
 
-    /**
-     * 
-     * @returns {Promise<Array<Graph>>}
-     */
     async all(): Promise<Array<Graph>> {
         try {
             const session = this._driver.session();
@@ -54,19 +40,12 @@ class GraphMapper implements IMapper<Graph>
         }
     }
 
-    /**
-     * 
-     * @param {{id: string}} d
-     * @returns {Promise<Graph | null>}
-     */
-    async findBy(d: {id: string}): Promise<Graph | null> {
-        if (d == null || d.id == null)
-            throw new Error("Null reference exception!");
+    async findBy({ id }: { id: string}): Promise<Graph | null> {
         try {
             const session = this._driver.session();
             const parameters = { 
                 data: {
-                    graphId: d.id
+                    graphId: id
                 }
             };
             const dbResponse = await session.run(`
@@ -89,14 +68,7 @@ class GraphMapper implements IMapper<Graph>
         }
     }
 
-    /**
-     * 
-     * @param {Graph} graph
-     * @returns {Promise<void>}
-     */
     async save(graph: Graph): Promise<void> {
-        if (graph == null)
-            throw new Error("Null reference exception!");
         try {
             const session = this._driver.session();
             const parameters = { 
@@ -118,14 +90,7 @@ class GraphMapper implements IMapper<Graph>
         }
     }
 
-    /**
-     * 
-     * @param {Graph} graph
-     * @returns {Promise<void>}
-     */
     async destroy(graph: Graph): Promise<void> {
-        if (graph == null)
-            throw new Error("Null reference exception!");
         try {
             const session = this._driver.session();
             const parameters = {

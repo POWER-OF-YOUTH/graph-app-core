@@ -4,6 +4,7 @@ import DatabaseError from './database_error';
 import Graph from './graph';
 import IMapper from './i_mapper';
 import Template from './template';
+import TemplateRepresentation from './template_representation';
 import Variable from './variable';
 import VariableMaker from './variable_maker';
 
@@ -12,31 +13,15 @@ class TemplateMapper implements IMapper<Template>
     private readonly _driver: Driver;
     private readonly _graph: Graph;
 
-    /**
-     * 
-     * @param {Driver} driver
-     * @param {Graph} graph
-     */
     constructor(driver: Driver, graph: Graph) {
-        if (driver == null || graph == null)
-            throw new Error("Null reference exception!");
-
         this._driver = driver;
         this._graph = graph;
     }
 
-    /**
-     * 
-     * @returns {Driver}
-     */
     get driver(): Driver {
         return this._driver;
     }
 
-    /**
-     * 
-     * @returns {Promise<Array<Template>>}
-     */
     async all(): Promise<Array<Template>> {
         try {
             const session = this._driver.session();
@@ -55,10 +40,15 @@ class TemplateMapper implements IMapper<Template>
             session.close();
 
             const templates = dbResponse.records.map(record => {
-                const data: {name: string} = record.get("data");
+                const data: { name: string, id: string, representation: string } = record.get("data");
                 const variables: Array<{name: string, type: string, data: string}> = record.get("variables");
-                const template = new Template(variables.map(data => VariableMaker.make(data)), data.name);
-        
+                const template = new Template(
+                    data.name, 
+                    variables.map(data => VariableMaker.make(data)), 
+                    TemplateRepresentation.fromJSON(data.representation), 
+                    data.id
+                );
+
                 return template;
             });
 
@@ -69,25 +59,18 @@ class TemplateMapper implements IMapper<Template>
         }
     }
 
-    /**
-     * 
-     * @param {{id: string}} d
-     * @returns {Promise<Template | null>}
-     */
-    async findBy(d: {name: string}): Promise<Template | null> {
-        if (d == null || d.name == null)
-            throw new Error("Null reference exception!");
+    async findBy({ id }: { id: string }): Promise<Template | null> {
         try {
             const session = this._driver.session();
-            const parameters = { 
+            const parameters = {
                 data: {
                     graphId: this._graph.id,
-                    name: d.name
+                    id
                 }
-            };
+            }
             const dbResponse = await session.run(`
                 MATCH (g:Graph)-[:CONTAINS]->(t:Template)
-                WHERE g.id = $data.graphId AND t.name = $data.name
+                WHERE g.id = $data.graphId AND t.id = $data.id
                 OPTIONAL MATCH (t)-[:HAVE]->(v:Variable)
                 RETURN properties(t) AS data, collect(properties(v)) AS variables
             `, parameters);
@@ -96,38 +79,36 @@ class TemplateMapper implements IMapper<Template>
             if (dbResponse.records.length === 0)
                 return null;
 
-            const data: {name: string} = dbResponse.records[0].get("data");
+            const data: { name: string, id: string, representation: string } = dbResponse.records[0].get("data");
             const variables: Array<{name: string, type: string, data: string}> = dbResponse.records[0].get("variables");
-            const template = new Template(variables.map(data => VariableMaker.make(data)), data.name);
-    
+            const template = new Template(
+                data.name, 
+                variables.map(data => VariableMaker.make(data)), 
+                TemplateRepresentation.fromJSON(data.representation), 
+                data.id
+            );
+
             return template;
-        }
+        }   
         catch (err) {
             throw new DatabaseError();
         }
     }
 
-    /**
-     * 
-     * @param {Template} template
-     * @returns {Promise<void>}
-     */
     async save(template: Template): Promise<void> {
-        if (template == null)
-            throw new Error("Null reference exception!");
         try {
             const session = this._driver.session();
             const parameters = { 
                 data: { 
                     graphId: this._graph.id,
-                    name: template.name,
+                    id: template.id,
                     variables: template.variables().map(v => { return { name: v.name, type: v.value.type.name, data: JSON.stringify(v.value.data) } })
                 } 
             }
             const dbResponse = await session.run(`
                 MATCH (g:Graph)
                 WHERE g.id = $data.graphId
-                MERGE (g)-[:CONTAINS]-(t:Template { name: $data.name })
+                MERGE (g)-[:CONTAINS]-(t:Template { id: $data.id })
                 FOREACH (variable IN $data.variables | 
                     MERGE (t)-[:HAVE]->(v:Variable { name: variable.name })
                     SET v = variable)
@@ -139,11 +120,6 @@ class TemplateMapper implements IMapper<Template>
         }
     }
 
-    /**
-     * 
-     * @param {Template} template
-     * @returns {Promise<void>}
-     */
     async destroy(template: Template): Promise<void> {
         if (template == null)
             throw new Error("Null reference exception!");
@@ -154,12 +130,12 @@ class TemplateMapper implements IMapper<Template>
             const parameters = { 
                 data: { 
                     graphId: this._graph.id,
-                    name: template.name,
+                    id: template.id,
                 } 
             }
             const dbResponse = await session.run(`
                 MATCH (g:Graph)-[:CONTAINS]->(t:Template)
-                WHERE g.id = $data.graphId AND t.name = $data.name
+                WHERE g.id = $data.graphId AND t.id = $data.id
                 OPTIONAL MATCH (t)-[:HAVE]->(v:Variable)
                 DETACH DELETE v, t
             `, parameters);
@@ -170,12 +146,6 @@ class TemplateMapper implements IMapper<Template>
         }
     }
 
-    /**
-     * 
-     * @private
-     * @param {Template} template
-     * @returns {Promise<boolean>}
-     */
     private async hasImplementedNodes(template: Template): Promise<boolean> {
         if (template == null)
             throw new Error("Null reference exception!");
@@ -184,12 +154,12 @@ class TemplateMapper implements IMapper<Template>
             const parameters = { 
                 data: { 
                     graphId: this._graph.id,
-                    name: template.name,
+                    id: template.id,
                 } 
             }
             const dbResponse = await session.run(`
                 MATCH (g:Graph)-[:CONTAINS]->(t:Template)
-                WHERE g.id = $data.graphId AND t.name = $data.name
+                WHERE g.id = $data.graphId AND t.id = $data.id
                 MATCH (n:Node)-[:REALIZE]->(t)
                 RETURN n LIMIT 1
             `, parameters);
@@ -203,4 +173,4 @@ class TemplateMapper implements IMapper<Template>
     }
 }
 
-export default TemplateMapper
+export default TemplateMapper;
