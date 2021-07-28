@@ -1,35 +1,28 @@
-import Template from './template';
-import Variable from './variable';
+import { Template, TemplateData } from './template';
+import { Variable, VariableData } from './variable';
+declare type NodeData = {
+    id: string;
+    template: TemplateData;
+    variables: Array<VariableData>;
+    x: number;
+    y: number;
+};
 declare class Node {
     private readonly _variablesMap;
     private readonly _template;
     private readonly _id;
-    /**
-     *
-     * @param {Array<Variable>} variables
-     * @param {string} name
-     */
-    constructor(template: Template, id?: string);
-    /**
-     *
-     * @returns {string}
-     */
+    private _x;
+    private _y;
+    constructor(template: Template, x: number, y: number, id?: string, variables?: Array<Variable> | null);
     get id(): string;
-    /**
-     *
-     * @returns {Template}
-     */
     get template(): Template;
-    /**
-     *
-     * @param {string} name
-     * @requires {Variable}
-     */
+    get x(): number;
+    set x(value: number);
+    get y(): number;
+    set y(value: number);
     variable(name: string): Variable | undefined;
-    /**
-     *
-     * @returns {Array<Variable}
-     */
     variables(): Array<Variable>;
+    toJSON(): NodeData;
 }
 export default Node;
+export { Node, NodeData };

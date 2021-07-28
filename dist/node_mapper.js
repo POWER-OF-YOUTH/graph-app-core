@@ -15,29 +15,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const database_error_1 = __importDefault(require("./database_error"));
 const node_1 = __importDefault(require("./node"));
 const template_mapper_1 = __importDefault(require("./template_mapper"));
+const variable_maker_1 = __importDefault(require("./variable_maker"));
 class NodeMapper {
-    /**
-     *
-     * @param {Driver} driver
-     * @param {Graph} graph
-     */
     constructor(driver, graph) {
-        if (driver == null || graph == null)
-            throw new Error("Null reference exception!");
         this._driver = driver;
         this._graph = graph;
     }
-    /**
-     *
-     * @returns {Driver}
-     */
     get driver() {
         return this._driver;
     }
-    /**
-     *
-     * @returns {Promise<Array<Node>>}
-     */
     all() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -61,7 +47,7 @@ class NodeMapper {
                     const template = record.get("template");
                     const data = record.get("data");
                     const variables = record.get("variables");
-                    const node = new node_1.default((yield tm.findBy({ name: template.name })), data.id);
+                    const node = new node_1.default((yield tm.findBy({ id: template.id })), data.x, data.y, data.id, variables.map(data => variable_maker_1.default.make(data)));
                     return node;
                 })));
                 return nodes;
@@ -71,16 +57,14 @@ class NodeMapper {
             }
         });
     }
-    where(d) {
+    where({ template }) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (d == null || d.template == null)
-                throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {
                     data: {
                         graphId: this._graph.id,
-                        templateName: d.template.name
+                        templateName: template.name
                     }
                 };
                 const dbResponse = yield session.run(`
@@ -96,7 +80,7 @@ class NodeMapper {
                 const nodes = yield Promise.all(dbResponse.records.map((record) => __awaiter(this, void 0, void 0, function* () {
                     const data = record.get("data");
                     const variables = record.get("variables");
-                    const node = new node_1.default(d.template, data.id);
+                    const node = new node_1.default(template, data.x, data.y, data.id, variables.map(data => variable_maker_1.default.make(data)));
                     return node;
                 })));
                 return nodes;
@@ -106,21 +90,14 @@ class NodeMapper {
             }
         });
     }
-    /**
-     *
-     * @param {{id: string}} d
-     * @returns {Promise<Node | null>}
-     */
-    findBy(d) {
+    findBy({ id }) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (d == null || d.id == null)
-                throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {
                     data: {
                         graphId: this._graph.id,
-                        id: d.id
+                        id
                     }
                 };
                 const dbResponse = yield session.run(`
@@ -137,7 +114,7 @@ class NodeMapper {
                 const template = dbResponse.records[0].get("template");
                 const data = dbResponse.records[0].get("data");
                 const variables = dbResponse.records[0].get("variables");
-                const node = new node_1.default((yield tm.findBy({ name: template.name })), data.id);
+                const node = new node_1.default((yield tm.findBy({ id: template.id })), data.x, data.y, data.id, variables.map(data => variable_maker_1.default.make(data)));
                 return node;
             }
             catch (err) {
@@ -145,15 +122,8 @@ class NodeMapper {
             }
         });
     }
-    /**
-     *
-     * @param {Node} node
-     * @returns {Promise<void>}
-     */
     save(node) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (node == null)
-                throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {
@@ -161,6 +131,8 @@ class NodeMapper {
                         graphId: this._graph.id,
                         templateName: node.template.name,
                         id: node.id,
+                        x: node.x,
+                        y: node.y,
                         variables: node.template.variables().map(v => { return { name: v.name, type: v.value.type.name, data: JSON.stringify(v.value.data) }; })
                     }
                 };
@@ -180,15 +152,8 @@ class NodeMapper {
             }
         });
     }
-    /**
-     *
-     * @param {Node} node
-     * @returns {Promise<void>}
-     */
     destroy(node) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (node == null)
-                throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {

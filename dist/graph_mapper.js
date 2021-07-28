@@ -15,25 +15,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const database_error_1 = __importDefault(require("./database_error"));
 const graph_1 = __importDefault(require("./graph"));
 class GraphMapper {
-    /**
-     *
-     * @param {Driver} driver
-     */
     constructor(driver) {
-        if (driver == null)
-            throw new Error("Null reference exception!");
         this._driver = driver;
     }
-    /**
-     * @returns {Driver}
-     */
     get driver() {
         return this._driver;
     }
-    /**
-     *
-     * @returns {Promise<Array<Graph>>}
-     */
     all() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -56,20 +43,13 @@ class GraphMapper {
             }
         });
     }
-    /**
-     *
-     * @param {{id: string}} d
-     * @returns {Promise<Graph | null>}
-     */
-    findBy(d) {
+    findBy({ id }) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (d == null || d.id == null)
-                throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {
                     data: {
-                        graphId: d.id
+                        graphId: id
                     }
                 };
                 const dbResponse = yield session.run(`
@@ -89,15 +69,8 @@ class GraphMapper {
             }
         });
     }
-    /**
-     *
-     * @param {Graph} graph
-     * @returns {Promise<void>}
-     */
     save(graph) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (graph == null)
-                throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {
@@ -119,15 +92,8 @@ class GraphMapper {
             }
         });
     }
-    /**
-     *
-     * @param {Graph} graph
-     * @returns {Promise<void>}
-     */
     destroy(graph) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (graph == null)
-                throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {

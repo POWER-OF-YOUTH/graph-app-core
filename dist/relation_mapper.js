@@ -16,28 +16,15 @@ const database_error_1 = __importDefault(require("./database_error"));
 const node_mapper_1 = __importDefault(require("./node_mapper"));
 const relation_1 = __importDefault(require("./relation"));
 class RelationMapper {
-    /**
-     *
-     * @param {Driver} driver
-     * @param {Graph} graph
-     */
     constructor(driver, graph) {
         if (driver == null || graph == null)
             throw new Error("Null reference exception!");
         this._driver = driver;
         this._graph = graph;
     }
-    /**
-     *
-     * @returns {Driver}
-     */
     get driver() {
         return this._driver;
     }
-    /**
-     *
-     * @returns {Promise<Array<Relation>>}
-     */
     all() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -72,31 +59,24 @@ class RelationMapper {
             }
         });
     }
-    /**
-     *
-     * @param {from: Node | undefined, to: Node | undefined} d
-     * @returns {Promise<Array<Relation>>}
-     */
-    where(d) {
+    where({ from, to }) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (d == null || (d.from == null && d.to == null))
-                throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {
                     data: {
                         graphId: this._graph.id,
-                        fromId: d.from,
-                        toId: d.to
+                        fromId: from === null || from === void 0 ? void 0 : from.id,
+                        toId: to === null || to === void 0 ? void 0 : to.id
                     }
                 };
                 const dbResponse = yield session.run(`
                 MATCH (g:Graph)
                 WHERE g.id = $data.graphId
                 MATCH (g)-[:CONTAINS]->(n1:Node)
-                ${d.from ? "WHERE n1.id = $data.fromId" : ""}
+                ${from ? "WHERE n1.id = $data.fromId" : ""}
                 MATCH (g)-[:CONTAINS]->(n2:Node)
-                ${d.to ? "WHERE n2.id = $data.toId" : ""}
+                ${to ? "WHERE n2.id = $data.toId" : ""}
                 MATCH (n1)-[rel:RELATION]->(n2)
                 WHERE n1 <> n2
                 RETURN properties(rel) AS data, properties(n1) AS from, properties(n2) AS to
@@ -113,24 +93,18 @@ class RelationMapper {
                 return relations;
             }
             catch (err) {
-                console.log(err);
                 throw new database_error_1.default();
             }
         });
     }
-    /**
-     *
-     * @param {{id: string}} d
-     * @returns {Promise<Relation | null>}
-     */
-    findBy(d) {
+    findBy({ id }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const session = this._driver.session();
                 const parameters = {
                     data: {
                         graphId: this._graph.id,
-                        id: d.id
+                        id
                     }
                 };
                 const dbResponse = yield session.run(`
@@ -158,15 +132,8 @@ class RelationMapper {
             }
         });
     }
-    /**
-     *
-     * @param {Relation}
-     * @returns {Promise<void>}
-     */
     save(relation) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (relation == null)
-                throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {
@@ -196,15 +163,8 @@ class RelationMapper {
             }
         });
     }
-    /**
-     *
-     * @param {Relation} relation
-     * @returns {Promise<void>}
-     */
     destroy(relation) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (relation == null)
-                throw new Error("Null reference exception!");
             try {
                 const session = this._driver.session();
                 const parameters = {
@@ -230,7 +190,6 @@ class RelationMapper {
                 session.close();
             }
             catch (err) {
-                console.log(err);
                 throw new database_error_1.default();
             }
         });

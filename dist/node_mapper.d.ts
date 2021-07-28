@@ -6,44 +6,16 @@ import Template from './template';
 declare class NodeMapper implements IMapper<Node> {
     private readonly _driver;
     private readonly _graph;
-    /**
-     *
-     * @param {Driver} driver
-     * @param {Graph} graph
-     */
     constructor(driver: Driver, graph: Graph);
-    /**
-     *
-     * @returns {Driver}
-     */
     get driver(): Driver;
-    /**
-     *
-     * @returns {Promise<Array<Node>>}
-     */
     all(): Promise<Array<Node>>;
-    where(d: {
-        template: Template | undefined;
-    }): Promise<Node[]>;
-    /**
-     *
-     * @param {{id: string}} d
-     * @returns {Promise<Node | null>}
-     */
-    findBy(d: {
+    where({ template }: {
+        template: Template;
+    }): Promise<Array<Node>>;
+    findBy({ id }: {
         id: string;
     }): Promise<Node | null>;
-    /**
-     *
-     * @param {Node} node
-     * @returns {Promise<void>}
-     */
     save(node: Node): Promise<void>;
-    /**
-     *
-     * @param {Node} node
-     * @returns {Promise<void>}
-     */
     destroy(node: Node): Promise<void>;
 }
 export default NodeMapper;

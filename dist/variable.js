@@ -1,30 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Variable = void 0;
 class Variable {
-    /**
-     *
-     * @param {string} name
-     * @param {IValue} value
-     */
     constructor(name, value) {
-        if (name == null || value == null)
-            throw new Error("Null reference exception!");
         this._name = name;
         this._value = value;
     }
-    /**
-     *
-     * @returns {string}
-     */
     get name() {
         return this._name;
     }
-    /**
-     *
-     * @returns {IValue}
-     */
     get value() {
         return this._value;
     }
+    toJSON() {
+        return {
+            name: this._name,
+            value: { type: this._value.type.name, data: this._value.data }
+        };
+    }
 }
+exports.Variable = Variable;
 exports.default = Variable;

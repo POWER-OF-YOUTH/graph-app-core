@@ -1,50 +1,38 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Node = void 0;
 const uuid_1 = require("uuid");
 class Node {
-    /**
-     *
-     * @param {Array<Variable>} variables
-     * @param {string} name
-     */
-    constructor(template, id = uuid_1.v4()) {
-        if (template == null || id == null)
-            throw new Error("Null reference exception!");
-        const variables = template.variables();
-        this._variablesMap = new Map();
-        for (let variable of variables)
-            this._variablesMap.set(variable.name, variable);
+    constructor(template, x, y, id = uuid_1.v4(), variables = null) {
+        if (variables === null)
+            variables = template.variables();
+        this._variablesMap = new Map(variables.map(v => [v.name, v]));
         this._template = template;
+        this._x = x;
+        this._y = y;
         this._id = id;
     }
-    /**
-     *
-     * @returns {string}
-     */
     get id() {
         return this._id;
     }
-    /**
-     *
-     * @returns {Template}
-     */
     get template() {
         return this._template;
     }
-    /**
-     *
-     * @param {string} name
-     * @requires {Variable}
-     */
+    get x() {
+        return this._x;
+    }
+    set x(value) {
+        this._x = value;
+    }
+    get y() {
+        return this._y;
+    }
+    set y(value) {
+        this._y = value;
+    }
     variable(name) {
-        if (name == null)
-            throw new Error("Null reference exception!");
         return this._variablesMap.get(name);
     }
-    /**
-     *
-     * @returns {Array<Variable}
-     */
     variables() {
         const variablesIter = this._variablesMap.values();
         const variables = [];
@@ -52,5 +40,15 @@ class Node {
             variables.push(variable);
         return variables;
     }
+    toJSON() {
+        return {
+            id: this._id,
+            template: this._template.toJSON(),
+            variables: this.variables().map(v => v.toJSON()),
+            x: this._x,
+            y: this._y
+        };
+    }
 }
+exports.Node = Node;
 exports.default = Node;

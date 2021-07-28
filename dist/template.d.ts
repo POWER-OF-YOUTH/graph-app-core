@@ -1,28 +1,24 @@
-import Variable from './variable';
+import { Variable, VariableData } from './variable';
+import { TemplateRepresentation, TemplateRepresentationData } from './template_representation';
+declare type TemplateData = {
+    name: string;
+    id: string;
+    representation: TemplateRepresentationData;
+    variables: Array<VariableData>;
+};
 declare class Template {
     private readonly _variablesMap;
     private readonly _name;
-    /**
-     *
-     * @param {Array<Variable>} variables
-     * @param {string} name
-     */
-    constructor(variables: Array<Variable>, name: string);
-    /**
-     *
-     * @returns {string}
-     */
+    private readonly _id;
+    private _representation;
+    constructor(name: string, variables: Array<Variable>, representation?: TemplateRepresentation, id?: string);
     get name(): string;
-    /**
-     *
-     * @param {string} name
-     * @requires {Variable}
-     */
+    get id(): string;
+    get representation(): TemplateRepresentation;
+    set representation(value: TemplateRepresentation);
     variable(name: string): Variable | undefined;
-    /**
-     *
-     * @returns {Array<Variable}
-     */
     variables(): Array<Variable>;
+    toJSON(): TemplateData;
 }
 export default Template;
+export { Template, TemplateData };

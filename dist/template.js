@@ -1,40 +1,32 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Template = void 0;
+const uuid_1 = require("uuid");
+const template_representation_1 = require("./template_representation");
 class Template {
-    /**
-     *
-     * @param {Array<Variable>} variables
-     * @param {string} name
-     */
-    constructor(variables, name) {
-        if (variables == null || name == null)
-            throw new Error("Null reference exception!");
+    constructor(name, variables, representation = new template_representation_1.TemplateRepresentation(), id = uuid_1.v4()) {
         this._variablesMap = new Map();
         for (let variable of variables)
             this._variablesMap.set(variable.name, variable);
         this._name = name;
+        this._representation = representation;
+        this._id = id;
     }
-    /**
-     *
-     * @returns {string}
-     */
     get name() {
         return this._name;
     }
-    /**
-     *
-     * @param {string} name
-     * @requires {Variable}
-     */
+    get id() {
+        return this._id;
+    }
+    get representation() {
+        return this._representation;
+    }
+    set representation(value) {
+        this._representation = value;
+    }
     variable(name) {
-        if (name == null)
-            throw new Error("Null reference exception!");
         return this._variablesMap.get(name);
     }
-    /**
-     *
-     * @returns {Array<Variable}
-     */
     variables() {
         const variablesIter = this._variablesMap.values();
         const variables = [];
@@ -42,5 +34,14 @@ class Template {
             variables.push(variable);
         return variables;
     }
+    toJSON() {
+        return {
+            name: this._name,
+            id: this._id,
+            representation: this._representation.toJSON(),
+            variables: this.variables().map(v => v.toJSON())
+        };
+    }
 }
+exports.Template = Template;
 exports.default = Template;

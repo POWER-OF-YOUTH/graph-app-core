@@ -1,22 +1,18 @@
 import IValue from './i_value';
+declare type VariableData = {
+    name: string;
+    value: {
+        type: string;
+        data: any;
+    };
+};
 declare class Variable {
     private readonly _name;
     private readonly _value;
-    /**
-     *
-     * @param {string} name
-     * @param {IValue} value
-     */
     constructor(name: string, value: IValue);
-    /**
-     *
-     * @returns {string}
-     */
     get name(): string;
-    /**
-     *
-     * @returns {IValue}
-     */
     get value(): IValue;
+    toJSON(): VariableData;
 }
 export default Variable;
+export { VariableData, Variable };
