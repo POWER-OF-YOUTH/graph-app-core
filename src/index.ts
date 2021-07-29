@@ -1,5 +1,30 @@
-import * as neo4j from './neo4j';
+import { Template, TemplateData } from './template';
+import TemplateMapper from './template_mapper';
+import { TemplateRepresentation, TemplateRepresentationData } from './template_representation';
+import { Graph, GraphData } from './graph';
+import GraphMapper from './graph_mapper';
+import { Variable, VariableData } from './variable';
+import StringValue from './string_value';
+import { Node, NodeData } from './node';
+import NodeMapper from './node_mapper';
+import { Relation, RelationData } from './relation';
+import RelationMapper from './relation_mapper'; 
 
 export {
-    neo4j
+    Graph,
+    GraphData,
+    GraphMapper,
+    Template,
+    TemplateData,
+    TemplateRepresentation,
+    TemplateMapper,
+    Variable,
+    VariableData,
+    StringValue,
+    Node,
+    NodeData,
+    NodeMapper,
+    Relation,
+    RelationData,
+    RelationMapper
 }

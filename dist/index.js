@@ -1,24 +1,28 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.neo4j = void 0;
-const neo4j = __importStar(require("./neo4j"));
-exports.neo4j = neo4j;
+exports.RelationMapper = exports.Relation = exports.NodeMapper = exports.Node = exports.StringValue = exports.Variable = exports.TemplateMapper = exports.TemplateRepresentation = exports.Template = exports.GraphMapper = exports.Graph = void 0;
+const template_1 = require("./template");
+Object.defineProperty(exports, "Template", { enumerable: true, get: function () { return template_1.Template; } });
+const template_mapper_1 = __importDefault(require("./template_mapper"));
+exports.TemplateMapper = template_mapper_1.default;
+const template_representation_1 = require("./template_representation");
+Object.defineProperty(exports, "TemplateRepresentation", { enumerable: true, get: function () { return template_representation_1.TemplateRepresentation; } });
+const graph_1 = require("./graph");
+Object.defineProperty(exports, "Graph", { enumerable: true, get: function () { return graph_1.Graph; } });
+const graph_mapper_1 = __importDefault(require("./graph_mapper"));
+exports.GraphMapper = graph_mapper_1.default;
+const variable_1 = require("./variable");
+Object.defineProperty(exports, "Variable", { enumerable: true, get: function () { return variable_1.Variable; } });
+const string_value_1 = __importDefault(require("./string_value"));
+exports.StringValue = string_value_1.default;
+const node_1 = require("./node");
+Object.defineProperty(exports, "Node", { enumerable: true, get: function () { return node_1.Node; } });
+const node_mapper_1 = __importDefault(require("./node_mapper"));
+exports.NodeMapper = node_mapper_1.default;
+const relation_1 = require("./relation");
+Object.defineProperty(exports, "Relation", { enumerable: true, get: function () { return relation_1.Relation; } });
+const relation_mapper_1 = __importDefault(require("./relation_mapper"));
+exports.RelationMapper = relation_mapper_1.default;
